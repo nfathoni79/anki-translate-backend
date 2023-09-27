@@ -133,64 +133,66 @@ app.post('/scrape', async (req, res) => {
 
     // Scrape definitions
     console.log('Scraping definitions...')
-    for (let i = 0; i < defSection.childElementCount; i++) {
-      let child = defSection.children[i]
-
-      if (child.className == earlyFieldsClass) {
-        // Fields in the beginning before part of speech
-        earlyFields = scrapeFields(child)
-      } else if (child.className == partWrapperClass) {
-        // Part of speech
-        defPartsIndex++
-        const part = capitalize(child.querySelector(partSel).innerText)
-        defParts.push({
-          part: part,
-          definitions: [],
-        })
-
-        // First part of speech for translation with no transSection
-        if (firstPart == '') {
-          firstPart = part
+    if (defSection != null) {
+      for (let i = 0; i < defSection.childElementCount; i++) {
+        let child = defSection.children[i]
+  
+        if (child.className == earlyFieldsClass) {
+          // Fields in the beginning before part of speech
+          earlyFields = scrapeFields(child)
+        } else if (child.className == partWrapperClass) {
+          // Part of speech
+          defPartsIndex++
+          const part = capitalize(child.querySelector(partSel).innerText)
+          defParts.push({
+            part: part,
+            definitions: [],
+          })
+  
+          // First part of speech for translation with no transSection
+          if (firstPart == '') {
+            firstPart = part
+          }
+  
+          // Fields after part of speech
+          const partFieldWrapper = child.querySelector(partFieldWrapperSel)
+          if (partFieldWrapper != null) {
+            earlyFields = scrapeFields(partFieldWrapper)
+          }
+        } else if (child.className == defWrapperClass || child.className == hiddenDefWrapperClass) {
+          // Number
+          const no = child.querySelector(numberSel).innerText
+          let defObj = {
+            no: no,
+            text: '',
+            example: '',
+          }
+  
+          // Early fields from the beginning or after part of speech
+          if (earlyFields != '') {
+            defObj.text += earlyFields
+            earlyFields = ''
+          }
+  
+          // Fields after number
+          const fieldsWrapper = child.querySelector(fieldsWrapperSel)
+          if (fieldsWrapper != null) {
+            let fieldsString = scrapeFields(fieldsWrapper)
+            defObj.text += fieldsString
+          }
+  
+          // Definition
+          const definition = child.querySelector(definitionSel).innerText
+          defObj.text += definition
+  
+          // Example
+          const exampleEl = child.querySelector(exampleSel)
+          if (exampleEl != null) {
+            defObj.example = exampleEl.innerText
+          }
+  
+          defParts[defPartsIndex].definitions.push(defObj)
         }
-
-        // Fields after part of speech
-        const partFieldWrapper = child.querySelector(partFieldWrapperSel)
-        if (partFieldWrapper != null) {
-          earlyFields = scrapeFields(partFieldWrapper)
-        }
-      } else if (child.className == defWrapperClass || child.className == hiddenDefWrapperClass) {
-        // Number
-        const no = child.querySelector(numberSel).innerText
-        let defObj = {
-          no: no,
-          text: '',
-          example: '',
-        }
-
-        // Early fields from the beginning or after part of speech
-        if (earlyFields != '') {
-          defObj.text += earlyFields
-          earlyFields = ''
-        }
-
-        // Fields after number
-        const fieldsWrapper = child.querySelector(fieldsWrapperSel)
-        if (fieldsWrapper != null) {
-          let fieldsString = scrapeFields(fieldsWrapper)
-          defObj.text += fieldsString
-        }
-
-        // Definition
-        const definition = child.querySelector(definitionSel).innerText
-        defObj.text += definition
-
-        // Example
-        const exampleEl = child.querySelector(exampleSel)
-        if (exampleEl != null) {
-          defObj.example = exampleEl.innerText
-        }
-
-        defParts[defPartsIndex].definitions.push(defObj)
       }
     }
 
