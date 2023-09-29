@@ -7,8 +7,8 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 
-app.post('/scrape', async (req, res) => {
-  const enText = req.body.enText
+app.get('/translate', async (req, res) => {
+  const enText = req.query.en
 
   if (!enText) {
     res.status(400).json({ message: 'Incomplete data' })
@@ -27,28 +27,56 @@ app.post('/scrape', async (req, res) => {
   const page = await browser.newPage()
 
   console.log('Opening page...')
-  await page.goto(`https://translate.google.com/?sl=en&tl=id&text=${enText}`, {
+  await page.goto(`https://translate.google.com/details?sl=en&tl=id&text=${enText}`, {
     waitUntil: 'networkidle0',
+    timeout: 0,
   })
 
   // Click expand definitions if exists
   try {
-    const expandDefSel = 'div.Sp3AF > div.I87fLc.FnSTic.XzOhkf > div.ZShpvc > div.VK4HE'
+    const expandDefSel = '#yDmH0d > c-wiz > div > div.kmXzdf > c-wiz > div.c11pPb > c-wiz > div > div.a2Icud > div.Sp3AF > div.I87fLc.FnSTic > div.ZShpvc > div:nth-child(1) > button'
     await page.click(expandDefSel)
   } catch (error) {
-    console.log('Expand definitions:', error.message)
+    console.log('Expand definitions: ', error.message)
   }
 
   // Click expand translations if exists
   try {
-    const expandTransSel = '#yDmH0d > c-wiz > div > div.WFnNle > c-wiz > div.OlSOob > c-wiz > div.kGmWO > c-wiz > div > div > div.GQpbTd.WZapbb > div > div.ZShpvc > div.VK4HE'
+    const expandTransSel = 'div.I87fLc.oLovEc > div.ZShpvc > div:nth-child(1) > button'
     await page.click(expandTransSel)
   } catch (error) {
-    console.log('Expand translations:', error.message)
+    console.log('Expand translations: ', error.message)
   }
 
   // Wait a while after click
   await new Promise(_ => setTimeout(_, 1000))
+
+  /** Element selectors */
+  const selectors = {
+    inputSection: 'div.ccvoYb.EjH7wc > div.AxqVh > div.OPPzxe',
+    bottomSection: '#yDmH0d > c-wiz > div > div.kmXzdf > c-wiz > div.c11pPb > c-wiz > div > div.a2Icud',
+    defSection: 'div.Sp3AF > div.I87fLc.FnSTic > div.Dwvecf',
+    fieldsWrapper: 'div.CF8Iy.CLHVBf',
+    field: 'div.PG9puc',
+    transWrapper: 'div.GQpbTd > div.I87fLc.oLovEc',
+    transSection: 'div.Dwvecf > table.CFNMfb',
+    enText: 'c-wiz.rm1UF.UnxENd.dHeVVb > span[jsname="ZdXDJ"] > span[ssk="6:FCIgBe"] > div.QFw9Te > div.A3dMNc > span[jsname="BvKnce"]',
+    enPhon: 'c-wiz.rm1UF.UnxENd.dHeVVb > div.UdTY9.BwTYAc > div.kO6q6e',
+    idText: 'c-wiz.sciAJc > div.QcsUad.BDJ8fb > div.usGWQd > div.KkbLmb > div.lRu31 > span.HwtZe > span.jCAhz.ChMk0b > span.ryNqvb',
+    earlyFields: 'CF8Iy RZhose',
+    partWrapper: 'KWoJId',
+    part: 'div.eIKIse',
+    partFieldWrapper: 'div.CF8Iy.rJnFff',
+    defWrapper: 'eqNifb',
+    hiddenDefWrapper: 'trQcMc',
+    number: 'div.luGxAd > div.RSggmb',
+    definition: 'div.JAk00.OvhKBb > div.fw3eif',
+    example: 'div.JAk00.OvhKBb > div.MZgjEb',
+    transGroup: 'tbody.U87jab',
+    transPart: 'th.yYp8Hb > div.G8Go6b > div.eIKIse.Nv4rrc',
+    trans: 'th.rsNpAc.S18kfe > div.KnIHac > span.kgnlhe',
+    hiddenTrans: 'th.rsNpAc.S18kfe > div.trQcMc > div.KnIHac > span.kgnlhe',
+  }
 
   // Log inside evaluate
   page.on('console', (msg) => {
@@ -57,142 +85,122 @@ app.post('/scrape', async (req, res) => {
   });
 
   // Scrape
-  const translation = await page.evaluate(() => {
+  const translation = await page.evaluate(async (selectors) => {
     console.log('Scraping...')
-    const inputSectionSel = 'div.ccvoYb.EjH7wc > div.AxqVh > div.OPPzxe'
-    const bottomSectionSel = 'div.kGmWO > c-wiz.zpzJBc > div.jTj8gd > div.a2Icud'
-    const defSectionSel = 'div.Sp3AF > div.I87fLc.FnSTic.XzOhkf > div.Dwvecf'
-    const fieldSel = 'div.PG9puc'
-    const transWrapperSel = 'div.GQpbTd.WZapbb > div.I87fLc.oLovEc.XzOhkf'
-    const transSectionSel = 'div.Dwvecf > table.CFNMfb'
-    const enTextSel = 'c-wiz.rm1UF.UnxENd.dHeVVb > span[jsname="ZdXDJ"] > span[ssk="6:FCIgBe"] > div.QFw9Te > div.A3dMNc > span[jsname="BvKnce"]'
-    const enPhonSel = 'c-wiz.rm1UF.UnxENd.dHeVVb > div.UdTY9.BwTYAc > div.kO6q6e'
-    const idTextSel = 'c-wiz.sciAJc > div.QcsUad.BDJ8fb > div.usGWQd > div.KkbLmb > div.lRu31 > span.HwtZe > span.jCAhz.ChMk0b > span.ryNqvb'
 
-    const earlyFieldsClass = 'CF8Iy RZhose'
-    const partWrapperClass = 'KWoJId'
-    const partSel = 'div.eIKIse'
-    const partFieldWrapperSel = 'div.CF8Iy.rJnFff'
-    const defWrapperClass = 'eqNifb'
-    const hiddenDefWrapperClass = 'trQcMc'
-    const numberSel = 'div.luGxAd > div.RSggmb'
-    const fieldsWrapperSel = 'div.CF8Iy.CLHVBf'
-    const definitionSel = 'div.JAk00.OvhKBb > div.fw3eif'
-    const exampleSel = 'div.JAk00.OvhKBb > div.MZgjEb'
-
-    const transGroupSel = 'tbody.U87jab'
-    const transPartSel = 'th.yYp8Hb > div.G8Go6b > div.eIKIse.Nv4rrc'
-    const transSel = 'th.rsNpAc.S18kfe > div.KnIHac > span.kgnlhe'
-    const hiddenTransSel = 'th.rsNpAc.S18kfe > div.trQcMc > div.KnIHac > span.kgnlhe'
-
-    // Capitalize text
-    const capitalize = (str) => {
-      return str.charAt(0).toUpperCase() + str.slice(1)
-    }
-
-    // Scrape fields
+    /**
+     * Get the text of the fields of definition from a fields wrapper element.
+     * @param {Element} fieldsWrapper 
+     * @returns {String}
+     */
     const scrapeFields = (fieldsWrapper) => {
-      const fieldEls = fieldsWrapper.querySelectorAll(fieldSel)
+      const fieldEls = fieldsWrapper.querySelectorAll(selectors.field)
       let fieldsString = ''
-    
+  
       for (const fieldEl of fieldEls) {
         fieldsString += `(${fieldEl.innerText.toUpperCase()}) `
       }
-    
+  
       return fieldsString
     }
 
-    const inputSection = document.querySelector(inputSectionSel)
-    const bottomSection = document.querySelector(bottomSectionSel)
+    const inputSection = document.querySelector(selectors.inputSection)
+    const bottomSection = document.querySelector(selectors.bottomSection)
 
     // Check if bottomSection is null
     let defSection = null
     try {
-      defSection = bottomSection.querySelector(defSectionSel)
+      defSection = bottomSection.querySelector(selectors.defSection)
     } catch (error) {
       return null
     }
 
-    const transWrapper = bottomSection.querySelector(transWrapperSel)
+    const transWrapper = bottomSection.querySelector(selectors.transWrapper)
     let transSection = null
     if (transWrapper != null && transWrapper.childElementCount > 0) {
-      transSection = transWrapper.querySelector(transSectionSel)
+      transSection = transWrapper.querySelector(selectors.transSection)
     }
 
-    const enText = inputSection.querySelector(enTextSel).innerText
-    const enPhon = inputSection.querySelector(enPhonSel).innerText
-    const idText = inputSection.querySelector(idTextSel).innerText
+    const enText = inputSection.querySelector(selectors.enText).innerText
+    const enPhon = inputSection.querySelector(selectors.enPhon).innerText
+    const idText = inputSection.querySelector(selectors.idText).innerText
 
+    /** First part of speech for translation with no transSection */
     let firstPart = ''
+
+    /** Early fields from the beginning or after part of speech */
     let earlyFields = ''
+    
+    /** Parts of speech of the definitions */
     let defParts = []
+    
     let defPartsIndex = -1
 
+    /** Parts of speech of the translations */
     let transParts = []
+    
     let transPartsIndex = -1
 
     // Scrape definitions
     console.log('Scraping definitions...')
-    if (defSection != null) {
-      for (let i = 0; i < defSection.childElementCount; i++) {
-        let child = defSection.children[i]
-  
-        if (child.className == earlyFieldsClass) {
-          // Fields in the beginning before part of speech
-          earlyFields = scrapeFields(child)
-        } else if (child.className == partWrapperClass) {
-          // Part of speech
-          defPartsIndex++
-          const part = capitalize(child.querySelector(partSel).innerText)
-          defParts.push({
-            part: part,
-            definitions: [],
-          })
-  
-          // First part of speech for translation with no transSection
-          if (firstPart == '') {
-            firstPart = part
-          }
-  
-          // Fields after part of speech
-          const partFieldWrapper = child.querySelector(partFieldWrapperSel)
-          if (partFieldWrapper != null) {
-            earlyFields = scrapeFields(partFieldWrapper)
-          }
-        } else if (child.className == defWrapperClass || child.className == hiddenDefWrapperClass) {
-          // Number
-          const no = child.querySelector(numberSel).innerText
-          let defObj = {
-            no: no,
-            text: '',
-            example: '',
-          }
-  
-          // Early fields from the beginning or after part of speech
-          if (earlyFields != '') {
-            defObj.text += earlyFields
-            earlyFields = ''
-          }
-  
-          // Fields after number
-          const fieldsWrapper = child.querySelector(fieldsWrapperSel)
-          if (fieldsWrapper != null) {
-            let fieldsString = scrapeFields(fieldsWrapper)
-            defObj.text += fieldsString
-          }
-  
-          // Definition
-          const definition = child.querySelector(definitionSel).innerText
-          defObj.text += definition
-  
-          // Example
-          const exampleEl = child.querySelector(exampleSel)
-          if (exampleEl != null) {
-            defObj.example = exampleEl.innerText
-          }
-  
-          defParts[defPartsIndex].definitions.push(defObj)
+    for (let i = 0; i < defSection.childElementCount; i++) {
+      let child = defSection.children[i]
+
+      if (child.className == selectors.earlyFields) {
+        // Fields in the beginning before part of speech
+        earlyFields = scrapeFields(child)
+      } else if (child.className == selectors.partWrapper) {
+        // Part of speech
+        defPartsIndex++
+        const part = child.querySelector(selectors.part).innerText
+        defParts.push({
+          part,
+          definitions: [],
+        })
+
+        // First part of speech for translation with no transSection
+        if (firstPart == '') {
+          firstPart = part
         }
+
+        // Fields after part of speech
+        const partFieldWrapper = child.querySelector(selectors.partFieldWrapper)
+        if (partFieldWrapper != null) {
+          earlyFields = scrapeFields(partFieldWrapper)
+        }
+      } else if (child.className == selectors.defWrapper || child.className == selectors.hiddenDefWrapper) {
+        // Number
+        const no = child.querySelector(selectors.number).innerText
+        let defObj = {
+          no,
+          text: '',
+          example: '',
+        }
+
+        // Early fields from the beginning or after part of speech
+        if (earlyFields != '') {
+          defObj.text += earlyFields
+          earlyFields = ''
+        }
+
+        // Fields after number
+        const fieldsWrapper = child.querySelector(selectors.fieldsWrapper)
+        if (fieldsWrapper != null) {
+          let fieldsString = scrapeFields(fieldsWrapper)
+          defObj.text += fieldsString
+        }
+
+        // Definition
+        const definition = child.querySelector(selectors.definition).innerText
+        defObj.text += definition
+
+        // Example
+        const exampleEl = child.querySelector(selectors.example)
+        if (exampleEl != null) {
+          defObj.example = exampleEl.innerText
+        }
+
+        defParts[defPartsIndex].definitions.push(defObj)
       }
     }
 
@@ -202,11 +210,11 @@ app.post('/scrape', async (req, res) => {
       transPartsIndex++
       transParts.push({
         part: firstPart,
-        translations: [idText], 
+        translations: [idText],
       })
     } else {
       // Translations groups by part of speech
-      const transGroups = transSection.querySelectorAll(transGroupSel)
+      const transGroups = transSection.querySelectorAll(selectors.transGroup)
 
       for (let i = 0; i < transGroups.length; i++) {
         // One translations group
@@ -219,15 +227,15 @@ app.post('/scrape', async (req, res) => {
           if (j == 0) {
             // Part of speech
             transPartsIndex++
-            const part = capitalize(child.querySelector(transPartSel).innerText)
+            const part = child.querySelector(selectors.transPart).innerText
             transParts.push({
-              part: part,
+              part,
               translations: [],
             })
 
-            let firstTrans = child.querySelector(transSel)
+            let firstTrans = child.querySelector(selectors.trans)
             if (firstTrans == null) {
-              firstTrans = child.querySelector(hiddenTransSel)
+              firstTrans = child.querySelector(selectors.hiddenTrans)
             }
 
             if (i == 0 && firstTrans.innerText != idText) {
@@ -236,9 +244,9 @@ app.post('/scrape', async (req, res) => {
               transParts[transPartsIndex].translations.push(firstTrans.innerText)
             }
           } else {
-            let trans = child.querySelector(transSel)
+            let trans = child.querySelector(selectors.trans)
             if (trans == null) {
-              trans = child.querySelector(hiddenTransSel)
+              trans = child.querySelector(selectors.hiddenTrans)
             }
 
             transParts[transPartsIndex].translations.push(trans.innerText)
@@ -248,17 +256,18 @@ app.post('/scrape', async (req, res) => {
     }
 
     return { enText, enPhon, idText, defParts, transParts }
-  })
+  }, selectors)
 
   await browser.close()
 
-  if (translation) {
-    res.json({ translation })
-  } else {
+  if (!translation) {
     res.status(404).json({ message: 'Not found' })
+    return
   }
+
+  res.json({ translation })
 })
 
 app.listen(5000, () => {
-  console.log('Server has started')
+  console.log('Server has started at port 5000')
 })
