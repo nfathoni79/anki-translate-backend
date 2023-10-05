@@ -143,64 +143,66 @@ app.get('/translate', async (req, res) => {
 
     // Scrape definitions
     console.log('Scraping definitions...')
-    for (let i = 0; i < defSection.childElementCount; i++) {
-      let child = defSection.children[i]
-
-      if (child.className == selectors.earlyFields) {
-        // Fields in the beginning before part of speech
-        earlyFields = scrapeFields(child)
-      } else if (child.className == selectors.partWrapper) {
-        // Part of speech
-        defPartsIndex++
-        const part = child.querySelector(selectors.part).innerText
-        defParts.push({
-          part,
-          definitions: [],
-        })
-
-        // First part of speech for translation with no transSection
-        if (firstPart == '') {
-          firstPart = part
+    if (defSection != null) {
+      for (let i = 0; i < defSection.childElementCount; i++) {
+        let child = defSection.children[i]
+  
+        if (child.className == selectors.earlyFields) {
+          // Fields in the beginning before part of speech
+          earlyFields = scrapeFields(child)
+        } else if (child.className == selectors.partWrapper) {
+          // Part of speech
+          defPartsIndex++
+          const part = child.querySelector(selectors.part).innerText
+          defParts.push({
+            part,
+            definitions: [],
+          })
+  
+          // First part of speech for translation with no transSection
+          if (firstPart == '') {
+            firstPart = part
+          }
+  
+          // Fields after part of speech
+          const partFieldWrapper = child.querySelector(selectors.partFieldWrapper)
+          if (partFieldWrapper != null) {
+            earlyFields = scrapeFields(partFieldWrapper)
+          }
+        } else if (child.className == selectors.defWrapper || child.className == selectors.hiddenDefWrapper) {
+          // Number
+          const no = child.querySelector(selectors.number).innerText
+          let defObj = {
+            no,
+            text: '',
+            example: '',
+          }
+  
+          // Early fields from the beginning or after part of speech
+          if (earlyFields != '') {
+            defObj.text += earlyFields
+            earlyFields = ''
+          }
+  
+          // Fields after number
+          const fieldsWrapper = child.querySelector(selectors.fieldsWrapper)
+          if (fieldsWrapper != null) {
+            let fieldsString = scrapeFields(fieldsWrapper)
+            defObj.text += fieldsString
+          }
+  
+          // Definition
+          const definition = child.querySelector(selectors.definition).innerText
+          defObj.text += definition
+  
+          // Example
+          const exampleEl = child.querySelector(selectors.example)
+          if (exampleEl != null) {
+            defObj.example = exampleEl.innerText
+          }
+  
+          defParts[defPartsIndex].definitions.push(defObj)
         }
-
-        // Fields after part of speech
-        const partFieldWrapper = child.querySelector(selectors.partFieldWrapper)
-        if (partFieldWrapper != null) {
-          earlyFields = scrapeFields(partFieldWrapper)
-        }
-      } else if (child.className == selectors.defWrapper || child.className == selectors.hiddenDefWrapper) {
-        // Number
-        const no = child.querySelector(selectors.number).innerText
-        let defObj = {
-          no,
-          text: '',
-          example: '',
-        }
-
-        // Early fields from the beginning or after part of speech
-        if (earlyFields != '') {
-          defObj.text += earlyFields
-          earlyFields = ''
-        }
-
-        // Fields after number
-        const fieldsWrapper = child.querySelector(selectors.fieldsWrapper)
-        if (fieldsWrapper != null) {
-          let fieldsString = scrapeFields(fieldsWrapper)
-          defObj.text += fieldsString
-        }
-
-        // Definition
-        const definition = child.querySelector(selectors.definition).innerText
-        defObj.text += definition
-
-        // Example
-        const exampleEl = child.querySelector(selectors.example)
-        if (exampleEl != null) {
-          defObj.example = exampleEl.innerText
-        }
-
-        defParts[defPartsIndex].definitions.push(defObj)
       }
     }
 
