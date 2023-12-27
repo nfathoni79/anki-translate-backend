@@ -70,7 +70,7 @@ app.get('/translate', async (req, res) => {
     defWrapper: 'eqNifb',
     hiddenDefWrapper: 'trQcMc',
     number: 'div.luGxAd > div.RSggmb',
-    definition: 'div.JAk00.OvhKBb > div.fw3eif',
+    definition: 'div.JAk00 > div.fw3eif',
     example: 'div.JAk00.OvhKBb > div.MZgjEb',
     transGroup: 'tbody.U87jab',
     transPart: 'th.yYp8Hb > div.G8Go6b > div.eIKIse.Nv4rrc',
