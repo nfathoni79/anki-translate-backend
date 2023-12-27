@@ -292,3 +292,5 @@ app.get('/translate', async (req, res) => {
 app.listen(5000, () => {
   console.log('Server has started at port 5000')
 })
+
+export default app
