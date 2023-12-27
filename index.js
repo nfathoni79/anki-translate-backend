@@ -1,3 +1,4 @@
+import 'dotenv-flow/config'
 import express from 'express'
 import puppeteer from 'puppeteer'
 import cors from 'cors'
@@ -15,14 +16,32 @@ app.get('/translate', async (req, res) => {
     return
   }
 
-  console.log('Opening browser...')
-  const browser = await puppeteer.launch({
-    headless: true,
-    defaultViewport: {
-      width: 1280,
-      height: 720,
-    },
-  })
+  // console.log('Opening browser...')
+  // const browser = await puppeteer.launch({
+  //   headless: true,
+  //   defaultViewport: {
+  //     width: 1280,
+  //     height: 720,
+  //   },
+  // })
+
+  console.log('Opening remote browser...')
+  const browserlessToken = process.env.BROWSERLESS_TOKEN
+  let browser
+
+  try {
+    browser = await puppeteer.connect({
+      browserWSEndpoint: `wss://chrome.browserless.io?token=${browserlessToken}`,
+      defaultViewport: {
+        width: 1280,
+        height: 720,
+      },
+    })
+  } catch (error) {
+    console.log('Error opening browser')
+    res.status(400).json({ message: 'Error opening browser' })
+    return
+  }
 
   const page = await browser.newPage()
 
