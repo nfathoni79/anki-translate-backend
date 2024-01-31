@@ -90,7 +90,7 @@ app.get('/translate', async (req, res) => {
     hiddenDefWrapper: 'trQcMc',
     number: 'div.luGxAd > div.RSggmb',
     definition: 'div.JAk00 > div.fw3eif',
-    example: 'div.JAk00.OvhKBb > div.MZgjEb',
+    example: 'div.JAk00 > div.MZgjEb > q',
     transGroup: 'tbody.U87jab',
     transPart: 'th.yYp8Hb > div.G8Go6b > div.eIKIse.Nv4rrc',
     trans: 'th.rsNpAc.S18kfe > div.KnIHac > span.kgnlhe',
