@@ -79,8 +79,8 @@ app.get('/translate', async (req, res) => {
     field: 'div.PG9puc',
     transWrapper: 'div.GQpbTd > div.I87fLc.oLovEc',
     transSection: 'div.Dwvecf > table.CFNMfb',
-    enText: 'c-wiz.rm1UF.UnxENd.dHeVVb > span[jsname="ZdXDJ"] > span[ssk="6:FCIgBe"] > div.QFw9Te > div.A3dMNc > span[jsname="BvKnce"]',
-    enPhon: 'c-wiz.rm1UF.UnxENd.dHeVVb > div.UdTY9.BwTYAc > div.kO6q6e',
+    enText: 'c-wiz.rm1UF.dHeVVb.UnxENd.rBs9Gd > span > span > div > textarea',
+    enPhon: 'c-wiz.rm1UF.dHeVVb.UnxENd.rBs9Gd > div.UdTY9.BwTYAc.leDWne > div.kO6q6e > span',
     idText: 'c-wiz.sciAJc > div.QcsUad.BDJ8fb > div.usGWQd > div.KkbLmb > div.lRu31 > span.HwtZe > span.jCAhz.ChMk0b > span.ryNqvb',
     earlyFields: 'CF8Iy RZhose',
     partWrapper: 'KWoJId',
@@ -140,7 +140,9 @@ app.get('/translate', async (req, res) => {
       transSection = transWrapper.querySelector(selectors.transSection)
     }
 
-    const enText = inputSection.querySelector(selectors.enText).innerText
+    console.log('cobaInnerTextStart')
+    const enText = inputSection.querySelector(selectors.enText).value
+    console.log('cobaInnerTextEnd')
     const enPhon = inputSection.querySelector(selectors.enPhon).innerText
     const idText = inputSection.querySelector(selectors.idText).innerText
 
