@@ -140,10 +140,8 @@ app.get('/translate', async (req, res) => {
       transSection = transWrapper.querySelector(selectors.transSection)
     }
 
-    console.log('cobaInnerTextStart')
     const enText = inputSection.querySelector(selectors.enText).value
-    console.log('cobaInnerTextEnd')
-    const enPhon = inputSection.querySelector(selectors.enPhon).innerText
+    const enPhon = inputSection.querySelector(selectors.enPhon)?.innerText ?? ''
     const idText = inputSection.querySelector(selectors.idText).innerText
 
     /** First part of speech for translation with no transSection */
