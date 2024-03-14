@@ -53,7 +53,7 @@ app.get('/translate', async (req, res) => {
 
   // Click expand definitions if exists
   try {
-    const expandDefSel = '#yDmH0d > c-wiz > div > div.kmXzdf > c-wiz > div.c11pPb > c-wiz > div > div.a2Icud > div.Sp3AF > div.I87fLc.FnSTic > div.ZShpvc > div:nth-child(1) > button'
+    const expandDefSel = '#yDmH0d > c-wiz > div > div.kmXzdf > c-wiz > div.c11pPb > c-wiz > div > div.a2Icud > div.Sp3AF > div:nth-child(1) > div.ZShpvc > div:nth-child(1) > button'
     await page.click(expandDefSel)
   } catch (error) {
     console.log('Expand definitions: ', error.message)
@@ -61,7 +61,7 @@ app.get('/translate', async (req, res) => {
 
   // Click expand translations if exists
   try {
-    const expandTransSel = 'div.I87fLc.oLovEc > div.ZShpvc > div:nth-child(1) > button'
+    const expandTransSel = '#yDmH0d > c-wiz > div > div.kmXzdf > c-wiz > div.c11pPb > c-wiz > div > div.a2Icud > div.GQpbTd > div:nth-child(1) > div.ZShpvc > div:nth-child(1) > button'
     await page.click(expandTransSel)
   } catch (error) {
     console.log('Expand translations: ', error.message)
@@ -72,12 +72,12 @@ app.get('/translate', async (req, res) => {
 
   /** Element selectors */
   const selectors = {
-    inputSection: 'div.ccvoYb.EjH7wc > div.AxqVh > div.OPPzxe',
+    inputSection: 'div.ccvoYb > div.AxqVh > div.OPPzxe',
     bottomSection: '#yDmH0d > c-wiz > div > div.kmXzdf > c-wiz > div.c11pPb > c-wiz > div > div.a2Icud',
-    defSection: 'div.Sp3AF > div.I87fLc.FnSTic > div.Dwvecf',
+    defSection: 'div.Sp3AF > div.I87fLc > div.Dwvecf',
     fieldsWrapper: 'div.CF8Iy.CLHVBf',
     field: 'div.PG9puc',
-    transWrapper: 'div.GQpbTd > div.I87fLc.oLovEc',
+    transWrapper: 'div.GQpbTd > div.I87fLc',
     transSection: 'div.Dwvecf > table.CFNMfb',
     enText: 'c-wiz.rm1UF.dHeVVb.UnxENd > span > span > div > textarea',
     enPhon: 'c-wiz.rm1UF.dHeVVb.UnxENd > div.UdTY9.BwTYAc.leDWne > div.kO6q6e > span',
@@ -89,7 +89,7 @@ app.get('/translate', async (req, res) => {
     defWrapper: 'eqNifb',
     hiddenDefWrapper: 'trQcMc',
     number: 'div.luGxAd > div.RSggmb',
-    definition: 'div.JAk00 > div.fw3eif',
+    definition: 'div.JAk00 > div[lang="en"]',
     example: 'div.JAk00 > div.MZgjEb > q',
     transGroup: 'tbody.U87jab',
     transPart: 'th.yYp8Hb > div.G8Go6b > div.eIKIse.Nv4rrc',
