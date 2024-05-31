@@ -81,7 +81,7 @@ app.get('/translate', async (req, res) => {
     transSection: 'div.Dwvecf > table.CFNMfb',
     enText: 'c-wiz.rm1UF.dHeVVb.UnxENd > span > span > div > textarea',
     enPhon: 'c-wiz.rm1UF.dHeVVb.UnxENd > div.UdTY9.BwTYAc.leDWne > div.kO6q6e > span',
-    idText: 'c-wiz.sciAJc > div.QcsUad.BDJ8fb > div.usGWQd > div.KkbLmb > div.lRu31 > span.HwtZe > span.jCAhz.ChMk0b > span.ryNqvb',
+    idText: 'c-wiz.sciAJc > div.QcsUad.BDJ8fb > div.usGWQd > div.KkbLmb > div.lRu31 > span.HwtZe > span.jCAhz > span.ryNqvb',
     earlyFields: 'CF8Iy RZhose',
     partWrapper: 'KWoJId',
     part: 'div.eIKIse',
