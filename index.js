@@ -10,6 +10,7 @@ app.use(express.json())
 
 app.get('/translate', async (req, res) => {
   const enText = req.query.en
+  const usingLocalBrowser = req.query.local == '1'
 
   if (!enText) {
     res.status(400).json({ message: 'Incomplete data' })
@@ -30,15 +31,22 @@ app.get('/translate', async (req, res) => {
   let browser
 
   try {
-    browser = await puppeteer.connect({
-      browserWSEndpoint: `wss://chrome.browserless.io?token=${browserlessToken}`,
-      defaultViewport: {
-        width: 1280,
-        height: 720,
-      },
-    })
+    if (usingLocalBrowser) {
+      browser = await puppeteer.connect({
+        browserURL: 'http://localhost:21222',
+      })
+    } else {
+      browser = await puppeteer.connect({
+        browserWSEndpoint: `wss://chrome.browserless.io?token=${browserlessToken}`,
+        defaultViewport: {
+          width: 1280,
+          height: 720,
+        },
+      })
+    }
   } catch (error) {
     console.log('Error opening browser')
+    console.log(error)
     res.status(400).json({ message: 'Error opening browser' })
     return
   }
@@ -279,7 +287,11 @@ app.get('/translate', async (req, res) => {
     return { enText, enPhon, idText, defParts, transParts }
   }, selectors)
 
-  await browser.close()
+  if (usingLocalBrowser) {
+    await page.close()
+  } else {
+    await browser.close()
+  }
 
   if (!translation) {
     res.status(404).json({ message: 'Not found' })
