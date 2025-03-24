@@ -301,6 +301,123 @@ app.get('/translate', async (req, res) => {
   res.json({ translation })
 })
 
+app.get('/quran', async (req, res) => {
+  const quranUrl = req.query.url
+
+  if (!quranUrl) {
+    res.status(400).json({ message: 'Incomplete data' })
+    return
+  }
+
+  if (quranUrl.match(/https:\/\/corpus.quran.com\/qurandictionary\.jsp\?q=.+/) == null) {
+    res.status(400).json({ message: 'Invalid data' })
+    return
+  }
+
+  console.log('Opening remote browser...')
+  const browserlessToken = process.env.BROWSERLESS_TOKEN
+  let browser
+
+  try {
+    browser = await puppeteer.connect({
+      browserWSEndpoint: `wss://chrome.browserless.io?token=${browserlessToken}`,
+      defaultViewport: {
+        width: 1280,
+        height: 720,
+      },
+    })
+  } catch (error) {
+    console.log('Error opening browser')
+    console.log(error)
+    res.status(400).json({ message: 'Error opening browser' })
+    return
+  }
+
+  const page = await browser.newPage()
+
+  console.log('Opening page...')
+  const urlVerse = quranUrl.match(/\(.+\)/)[0]
+  await page.goto(quranUrl, {
+    waitUntil: 'networkidle0',
+    timeout: 0,
+  })
+
+  // Log inside evaluate
+  page.on('console', async (msg) => {
+    const msgArgs = msg.args();
+    for (let i = 0; i < msgArgs.length; ++i) {
+      console.log(await msgArgs[i].jsonValue());
+    }
+  })
+
+  // Scrape
+  const quran = await page.evaluate(async (urlVerse) => {
+    const root = document.querySelector('body > table.pageTemplate > tbody > tr:nth-child(3) > td.title > h2 > span').innerHTML
+    const words = document.querySelector('body > table.pageTemplate > tbody > tr:nth-child(4) > td.contentCell > div > ul:nth-child(4)')
+
+    let items = []
+
+    if (words != null) {
+      for (const item of words.children) {
+        items.push(item.querySelector('span').innerText)
+      }
+    } else {
+      items.push(document.querySelector('body > table.pageTemplate > tbody > tr:nth-child(4) > td.contentCell > div > p > span:nth-child(4)').innerText)
+    }
+
+    let formEl = document.querySelector('body > table.pageTemplate > tbody > tr:nth-child(4) > td.contentCell > div > h4.dxe')
+    let found = false
+
+    let formIndex = -1
+    let formText = ''
+    let subFormText = ''
+    let exampleText = ''
+    let exampleMeaning = ''
+
+    while (!found) {
+      if (formEl.tagName == 'H4' && formEl.className == 'dxe') {
+        formIndex++
+        formText = formEl.innerText
+        subFormText = ''
+      } else if (formEl.tagName == 'TABLE' && formEl.className == 'taf') {
+        const exampleEls = formEl.querySelector('tbody').children
+  
+        for (const el of exampleEls) {
+          const verseNo = el.querySelector('td.c1 > span').innerText
+          
+          if (verseNo == urlVerse) {
+            const verseMeaning = el.querySelector('td.c2 > a').innerText
+            const verseText = el.querySelector('td.c3').innerText
+            exampleText = `${verseNo} ${verseText}`
+            exampleMeaning = verseMeaning
+  
+            found = true
+            break
+          }
+        }
+      } else if (formEl.tagName == 'P' && formEl.className == 'dxt') {
+        subFormText = ` ${formEl.innerText}`
+      }
+  
+      formEl = formEl.nextSibling
+    }
+
+    const word = items[formIndex]
+    formText += subFormText
+
+    return { word, root, formIndex, formText, exampleText, exampleMeaning }
+  }, urlVerse)
+
+  await browser.close()
+
+  if (!quran) {
+    res.status(404).json({ message: 'Not found' })
+    return
+  }
+
+  res.json({ quran })
+})
+
 app.listen(5000, () => {
   console.log('Server has started at port 5000')
 })
